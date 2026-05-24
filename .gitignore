@@ -1,0 +1,9 @@
+# Secrets
+.env
+.env.local
+.env.*.local
+
+# Node/Vite leftovers
+node_modules/
+dist/
+.vscode/

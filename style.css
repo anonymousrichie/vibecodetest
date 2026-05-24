@@ -1,0 +1,60 @@
+/* Custom PanicPal Styles */
+
+:root {
+    --panic-red: #ff4d4d;
+    --panic-orange: #ff944d;
+}
+
+/* Smooth Page Transitions */
+body {
+    transition: background-color 0.5s ease;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 6px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.4s ease-out forwards;
+}
+
+/* Glassmorphism focus state */
+input:focus {
+    box-shadow: 0 0 15px rgba(255, 77, 77, 0.2);
+}
+
+/* Panic Mode Background Pulse */
+.panic-mode-active {
+    background-color: #1a0505;
+}
+
+.panic-overlay {
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(circle at center, rgba(255, 77, 77, 0.15) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 30;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+}
+
+.panic-mode-active .panic-overlay {
+    opacity: 1;
+}

@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PanicPal | I'm Cooked 😭</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="style.css">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        panic: {
+                            red: '#ff4d4d',
+                            orange: '#ff944d',
+                            glow: '#ff2a2a'
+                        }
+                    },
+                    backdropBlur: {
+                        xs: '2px',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0a0a0a;
+            color: #ffffff;
+        }
+        .glass {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .panic-glow {
+            box-shadow: 0 0 20px rgba(255, 42, 42, 0.4);
+        }
+        .gradient-text {
+            background: linear-gradient(90deg, #ff4d4d, #ff944d);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+    </style>
+</head>
+<body class="min-h-screen pb-20">
+    <!-- Navigation -->
+    <nav class="p-4 flex justify-between items-center glass sticky top-0 z-50">
+        <h1 class="text-2xl font-extrabold gradient-text tracking-tighter">PanicPal</h1>
+        <div class="flex items-center gap-4">
+            <button id="logoutBtn" class="text-sm opacity-60 hover:opacity-100 transition-opacity">Logout</button>
+            <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-panic-red to-panic-orange"></div>
+        </div>
+    </nav>
+
+    <main class="max-w-md mx-auto p-6 space-y-8">
+        <!-- Quick Stats -->
+        <section class="grid grid-cols-2 gap-4">
+            <div class="glass p-4 rounded-2xl">
+                <p class="text-xs opacity-50 uppercase font-bold">Due Today</p>
+                <p class="text-3xl font-black mt-1" id="dueTodayCount">0</p>
+            </div>
+            <div class="glass p-4 rounded-2xl">
+                <p class="text-xs opacity-50 uppercase font-bold">Streak</p>
+                <p class="text-3xl font-black mt-1" id="streakCount">🔥 3</p>
+            </div>
+        </section>
+
+        <!-- Next Action -->
+        <section id="nextAction" class="relative group">
+            <div class="absolute -inset-0.5 bg-gradient-to-r from-panic-red to-panic-orange rounded-3xl blur opacity-30 group-hover:opacity-50 transition duration-1000"></div>
+            <div class="relative glass p-6 rounded-3xl">
+                <span class="px-2 py-1 bg-panic-red/20 text-panic-red text-[10px] font-bold rounded-full uppercase tracking-widest">Next Priority</span>
+                <h2 class="text-xl font-bold mt-2" id="nextActionTitle">No urgent tasks!</h2>
+                <p class="text-sm opacity-60 mt-1" id="nextActionDeadline">You're chilling... for now.</p>
+                <p id="survivalMessage" class="hidden mt-4 text-xs font-black text-panic-red animate-pulse uppercase italic">Survival Mode: ON 💀</p>
+            </div>
+        </section>
+
+        <!-- Task List -->
+        <section class="space-y-4">
+            <div class="flex justify-between items-center">
+                <h3 class="font-bold text-lg">Your Tasks</h3>
+                <button id="addBtn" class="p-2 glass rounded-full hover:bg-white/10 transition-colors">
+                    <i data-lucide="plus"></i>
+                </button>
+            </div>
+            <div id="taskList" class="space-y-3">
+                <!-- Tasks will be injected here -->
+                <div class="animate-pulse glass p-4 rounded-2xl">Loading tasks...</div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Floating Panic Button -->
+    <button id="panicBtn" class="fixed bottom-6 left-1/2 -translate-x-1/2 px-8 py-4 bg-panic-red panic-glow text-white font-black rounded-full text-lg active:scale-95 transition-transform z-40">
+        I'M COOKED 😭
+    </button>
+
+    <!-- Panic Overlay -->
+    <div id="panicOverlay" class="panic-overlay"></div>
+
+    <!-- Modals -->
+    <div id="taskModal" class="fixed inset-0 z-[60] hidden flex items-center justify-center p-6 bg-black/60 backdrop-blur-sm">
+        <div class="glass w-full max-w-sm p-8 rounded-3xl space-y-6 animate-fade-in">
+            <h3 class="text-xl font-bold">New Task</h3>
+            <form id="taskForm" class="space-y-4">
+                <input type="text" id="taskTitle" required placeholder="What's the mission?" class="w-full bg-white/5 border border-white/10 p-3 rounded-xl focus:outline-none focus:border-panic-red">
+                <input type="datetime-local" id="taskDeadline" required class="w-full bg-white/5 border border-white/10 p-3 rounded-xl focus:outline-none focus:border-panic-red">
+                <select id="taskPriority" class="w-full bg-white/5 border border-white/10 p-3 rounded-xl focus:outline-none">
+                    <option value="low">Low Priority</option>
+                    <option value="medium" selected>Medium</option>
+                    <option value="high">High</option>
+                    <option value="critical">CRITICAL 💀</option>
+                </select>
+                <div class="flex gap-3 pt-2">
+                    <button type="button" id="closeModal" class="flex-1 py-3 glass rounded-xl font-bold">Cancel</button>
+                    <button type="submit" class="flex-1 py-3 bg-panic-red text-white rounded-xl font-bold">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- AI Smart Extract Modal -->
+    <div id="aiModal" class="fixed inset-0 z-[60] hidden flex items-center justify-center p-6 bg-black/60 backdrop-blur-sm">
+        <div class="glass w-full max-w-md p-8 rounded-3xl space-y-6 animate-fade-in">
+            <div class="flex items-center gap-2">
+                <i data-lucide="sparkles" class="text-panic-orange"></i>
+                <h3 class="text-xl font-bold">AI Smart Extract</h3>
+            </div>
+            <p class="text-xs opacity-60">Paste WhatsApp chats, emails, or announcements. PanicPal will extract the deadlines for you.</p>
+            <textarea id="aiInput" rows="5" placeholder="Paste your chaos here..." class="w-full bg-white/5 border border-white/10 p-3 rounded-xl focus:outline-none focus:border-panic-orange resize-none"></textarea>
+            <div class="flex gap-3">
+                <button type="button" id="closeAiModal" class="flex-1 py-3 glass rounded-xl font-bold">Cancel</button>
+                <button id="extractBtn" class="flex-1 py-3 bg-gradient-to-r from-panic-red to-panic-orange text-white rounded-xl font-bold">Extract Tasks</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating UI -->
+    <div class="fixed bottom-24 right-6 flex flex-col gap-4">
+        <button id="aiBtn" class="p-4 bg-white/10 glass rounded-full text-panic-orange hover:scale-110 transition-transform">
+            <i data-lucide="sparkles"></i>
+        </button>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/app.js" type="module"></script>
+    <script>
+        // Icons need to be re-initialized when DOM changes
+        window.refreshIcons = () => lucide.createIcons();
+        refreshIcons();
+    </script>
+</body>
+</html>

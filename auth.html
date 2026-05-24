@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PanicPal | Join the Chaos</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="style.css">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        panic: { red: '#ff4d4d', orange: '#ff944d' }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0a0a0a;
+            color: #ffffff;
+        }
+        .glass {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .gradient-text {
+            background: linear-gradient(90deg, #ff4d4d, #ff944d);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-6">
+    <div class="w-full max-w-sm space-y-8 text-center">
+        <div>
+            <h1 class="text-4xl font-black gradient-text tracking-tighter">PanicPal</h1>
+            <p class="text-sm opacity-60 mt-2">The only app for academic survival.</p>
+        </div>
+
+        <div class="glass p-8 rounded-3xl space-y-6">
+            <h2 id="authTitle" class="text-2xl font-bold">Login</h2>
+            
+            <form id="authForm" class="space-y-4">
+                <div class="space-y-1 text-left">
+                    <label class="text-xs font-bold opacity-50 ml-1 uppercase">Email</label>
+                    <input type="email" id="email" required class="w-full bg-white/5 border border-white/10 p-3 rounded-xl focus:outline-none focus:border-panic-red transition-colors" placeholder="your@school.edu">
+                </div>
+                <div class="space-y-1 text-left">
+                    <label class="text-xs font-bold opacity-50 ml-1 uppercase">Password</label>
+                    <input type="password" id="password" required class="w-full bg-white/5 border border-white/10 p-3 rounded-xl focus:outline-none focus:border-panic-red transition-colors" placeholder="••••••••">
+                </div>
+                
+                <button type="submit" id="submitBtn" class="w-full py-4 bg-gradient-to-r from-panic-red to-panic-orange text-white font-bold rounded-xl active:scale-95 transition-transform mt-4">
+                    Sign In
+                </button>
+            </form>
+
+            <p class="text-xs opacity-60">
+                <span id="toggleText">Don't have an account?</span>
+                <button id="toggleAuth" class="font-bold text-panic-red hover:underline ml-1">Sign Up</button>
+            </p>
+        </div>
+    </div>
+
+    <script src="js/auth.js" type="module"></script>
+</body>
+</html>
