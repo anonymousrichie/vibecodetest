@@ -1,25 +1,17 @@
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from './config.js';
 
+console.log('PanicPal Init: Checking Config...');
+console.log('URL defined:', !!SUPABASE_URL);
+console.log('Key defined:', !!SUPABASE_ANON_KEY);
+
+if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+    console.error('CRITICAL: Supabase config is missing! Check your .env and restart npm run dev.');
+}
+
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const authForm = document.getElementById('authForm');
-const authTitle = document.getElementById('authTitle');
-const submitBtn = document.getElementById('submitBtn');
-const toggleAuth = document.getElementById('toggleAuth');
-const toggleText = document.getElementById('toggleText');
-
-let isLogin = true;
-
-// Toggle between Login and Signup
-toggleAuth?.addEventListener('click', (e) => {
-    e.preventDefault();
-    isLogin = !isLogin;
-    
-    authTitle.textContent = isLogin ? 'Login' : 'Sign Up';
-    submitBtn.textContent = isLogin ? 'Sign In' : 'Create Account';
-    toggleText.textContent = isLogin ? "Don't have an account?" : "Already have an account?";
-    toggleAuth.textContent = isLogin ? 'Sign Up' : 'Login';
-});
+// ... rest of elements
 
 // Handle Form Submission
 authForm?.addEventListener('submit', async (e) => {
@@ -30,20 +22,24 @@ authForm?.addEventListener('submit', async (e) => {
     submitBtn.disabled = true;
     submitBtn.textContent = 'Processing...';
 
+    console.log(`Attempting ${isLogin ? 'Login' : 'Signup'} for:`, email);
+
     try {
         if (isLogin) {
-            const { error } = await supabase.auth.signInWithPassword({ email, password });
+            const { data, error } = await supabase.auth.signInWithPassword({ email, password });
             if (error) throw error;
+            console.log('Login successful:', data);
         } else {
-            const { error } = await supabase.auth.signUp({ email, password });
+            const { data, error } = await supabase.auth.signUp({ email, password });
             if (error) throw error;
+            console.log('Signup successful:', data);
             alert('Check your email for confirmation!');
         }
         
-        // Success -> Redirect to Dashboard
         window.location.href = 'index.html';
     } catch (error) {
-        alert(error.message);
+        console.error('Auth Error Details:', error);
+        alert(`Auth Failed: ${error.message || 'Check your internet or Supabase URL'}`);
     } finally {
         submitBtn.disabled = false;
         submitBtn.textContent = isLogin ? 'Sign In' : 'Create Account';

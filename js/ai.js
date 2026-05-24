@@ -17,7 +17,7 @@ export async function extractTasksFromText(text) {
         - deadline (ISO 8601 format, guess the year as 2026 if not specified)
         - priority (one of: low, medium, high, critical)
         
-        Respond ONLY with the JSON array.
+        Respond ONLY with the raw JSON array. Do not include markdown formatting or explanations.
     `;
 
     try {
@@ -38,14 +38,36 @@ export async function extractTasksFromText(text) {
 
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(errorData.error?.message || 'Gemini API Error');
+            const errorMsg = errorData.error?.message || 'Gemini API Error';
+            console.error('Gemini API Details:', errorData);
+            throw new Error(errorMsg);
         }
 
         const data = await response.json();
-        const content = data.candidates[0].content.parts[0].text.trim();
-        return JSON.parse(content);
+        
+        if (!data.candidates || data.candidates.length === 0) {
+            throw new Error('Gemini returned no results. Try shorter text.');
+        }
+
+        let content = data.candidates[0].content.parts[0].text.trim();
+        
+        // Robust JSON parsing: remove markdown blocks if AI ignored "ResponseMimeType"
+        if (content.startsWith('```')) {
+            content = content.replace(/^```json\n?|```$/g, '').trim();
+        }
+
+        try {
+            return JSON.parse(content);
+        } catch (parseError) {
+            console.error('Failed to parse Gemini output:', content);
+            throw new Error('AI returned an invalid format. Try again.');
+        }
     } catch (error) {
         console.error('Gemini Extraction Error:', error);
-        throw new Error('Failed to extract tasks. Check your connection and Gemini API key.');
+        // Throw the specific message if it's one we generated, otherwise the generic one
+        if (error.message.includes('API Key') || error.message.includes('invalid format')) {
+            throw error;
+        }
+        throw new Error(`AI Error: ${error.message}`);
     }
 }
