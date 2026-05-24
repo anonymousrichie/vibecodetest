@@ -1,9 +1,11 @@
-import { OPENAI_API_KEY } from './config.js';
+import { GEMINI_API_KEY } from './config.js';
 
 export async function extractTasksFromText(text) {
-    if (!OPENAI_API_KEY || OPENAI_API_KEY === 'YOUR_OPENAI_API_KEY') {
-        throw new Error('OpenAI API Key not configured. Check js/config.js');
+    if (!GEMINI_API_KEY || GEMINI_API_KEY === 'YOUR_GEMINI_API_KEY') {
+        throw new Error('Gemini API Key not configured. Check your .env file.');
     }
+
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
 
     const prompt = `
         You are PanicPal, a student productivity assistant. 
@@ -19,26 +21,31 @@ export async function extractTasksFromText(text) {
     `;
 
     try {
-        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        const response = await fetch(url, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${OPENAI_API_KEY}`
+                'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                model: 'gpt-4o',
-                messages: [{ role: 'user', content: prompt }],
-                temperature: 0.3
+                contents: [{
+                    parts: [{ text: prompt }]
+                }],
+                generationConfig: {
+                    responseMimeType: "application/json"
+                }
             })
         });
 
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error?.message || 'Gemini API Error');
+        }
+
         const data = await response.json();
-        const content = data.choices[0].message.content.trim();
-        // Remove markdown code blocks if present
-        const jsonString = content.replace(/```json|```/g, '');
-        return JSON.parse(jsonString);
+        const content = data.candidates[0].content.parts[0].text.trim();
+        return JSON.parse(content);
     } catch (error) {
-        console.error('AI Extraction Error:', error);
-        throw new Error('Failed to extract tasks. Check your connection and API key.');
+        console.error('Gemini Extraction Error:', error);
+        throw new Error('Failed to extract tasks. Check your connection and Gemini API key.');
     }
 }
